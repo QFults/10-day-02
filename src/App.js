@@ -1,65 +1,66 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import axios from 'axios'
 
 const App = () => {
-  const [movieState, setMovieState] = useState({
-    title: '',
-    movie: {},
-    movies: []
+  const [gifState, setGifState] = useState({
+    search: '',
+    gifs: []
   })
 
   const handleInputChange = ({ target }) => {
-    setMovieState({ ...movieState, [target.name]: target.value })
+    setGifState({ ...gifState, [target.name]: target.value })
   }
 
-  const handleSearchMovie = event => {
+  const handleSearchGIPHY = event => {
     event.preventDefault()
-    axios.get(`http://www.omdbapi.com/?apikey=trilogy&t=${movieState.title}`)
-      .then(({ data: movie }) => setMovieState({ ...movieState, movie, title: '' }))
+    axios.get(`https://api.giphy.com/v1/gifs/search?api_key=j6yOF05YP8AGwMifwqeDBZ1RYjr4n0Tj&q=${gifState.search}&limit=10&rating=g`)
+      .then(({ data: { data: gifs } }) => {
+        console.log(gifs)
+        gifs = gifs.map(gif => ({
+          id: gif.id,
+          name: gif.title,
+          animated: gif.images.original.url,
+          still: gif.images.original_still.url,
+          isAnimated: true
+        }))
+        setGifState({ ...gifState, gifs })
+      })
       .catch(err => console.error(err))
   }
 
-  const handleSaveMovie = () => {
-    const movies = [...movieState.movies]
-    movies.push(movieState.movie)
-    setMovieState({ ...movieState, movies, movie: {} })
+  const handlePausePlay = id => {
+    const gifs = [...gifState.gifs]
+    gifs.forEach(gif => {
+      if (gif.id === id) {
+        gif.isAnimated = !gif.isAnimated
+      }
+    })
+    setGifState({ ...gifState, gifs })
   }
-
-  useEffect(() => {
-    axios.get('http://www.omdbapi.com/?apikey=trilogy&t=Goodfellas')
-      .then(({ data: movie }) => setMovieState({ ...movieState, movie, title: '' }))
-      .catch(err => console.error(err))
-  }, [])
 
   return (
     <>
       <form>
         <p>
-          <label htmlFor='title'>title</label>
+          <label htmlFor='search'>search</label>
           <input
             type='text'
-            name='title'
-            value={movieState.title}
+            name='search'
+            value={gifState.search}
             onChange={handleInputChange}
           />
         </p>
-        <button onClick={handleSearchMovie}>Search Movie</button>
+        <button onClick={handleSearchGIPHY}>Search GIPHY</button>
       </form>
       <div>
-        <h1>{movieState.movie.Title}</h1>
-        <img src={movieState.movie.Poster} alt={movieState.movie.Title} />
-        <button onClick={handleSaveMovie}>Save Movie</button>
-      </div>
-      <hr />
-      <h1>Saved Movies</h1>
-      <hr />
-      <div>
         {
-          movieState.movies.map((movie, i) => (
-            <div key={i}>
-              <h1>{movie.Title}</h1>
-              <img src={movie.Poster} alt={movie.Title} />
-            </div>
+          gifState.gifs.map(gif => (
+            <img
+              key={gif.id}
+              src={gif.isAnimated ? gif.animated : gif.still}
+              alt={gif.name}
+              onClick={() => handlePausePlay(gif.id)}
+            />
           ))
         }
       </div>
