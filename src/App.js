@@ -1,65 +1,55 @@
 import { useState } from 'react'
-import axios from 'axios'
+import Form from './components/Form'
+import Item from './components/Item'
+import './App.css'
 
 const App = () => {
-  const [gifState, setGifState] = useState({
-    search: '',
-    gifs: []
+  const [itemState, setItemState] = useState({
+    item: '',
+    items: []
   })
 
   const handleInputChange = ({ target }) => {
-    setGifState({ ...gifState, [target.name]: target.value })
+    setItemState({ ...itemState, [target.name]: target.value })
   }
 
-  const handleSearchGIPHY = event => {
+  const handleAddItem = event => {
     event.preventDefault()
-    axios.get(`https://api.giphy.com/v1/gifs/search?api_key=j6yOF05YP8AGwMifwqeDBZ1RYjr4n0Tj&q=${gifState.search}&limit=10&rating=g`)
-      .then(({ data: { data: gifs } }) => {
-        console.log(gifs)
-        gifs = gifs.map(gif => ({
-          id: gif.id,
-          name: gif.title,
-          animated: gif.images.original.url,
-          still: gif.images.original_still.url,
-          isAnimated: true
-        }))
-        setGifState({ ...gifState, gifs })
-      })
-      .catch(err => console.error(err))
-  }
-
-  const handlePausePlay = id => {
-    const gifs = [...gifState.gifs]
-    gifs.forEach(gif => {
-      if (gif.id === id) {
-        gif.isAnimated = !gif.isAnimated
-      }
+    const items = [...itemState.items]
+    items.push({
+      text: itemState.item,
+      isDone: false
     })
-    setGifState({ ...gifState, gifs })
+    setItemState({ ...itemState, items, item: '' })
   }
 
+  const handleIsDone = i => {
+    const items = [...itemState.items]
+    items[i].isDone = !items[i].isDone
+    setItemState({ ...itemState, items })
+  }
+
+  const handleDeleteItem = i => {
+    const items = [...itemState.items]
+    items.splice(i, 1)
+    setItemState({ ...itemState, items })
+  }
   return (
     <>
-      <form>
-        <p>
-          <label htmlFor='search'>search</label>
-          <input
-            type='text'
-            name='search'
-            value={gifState.search}
-            onChange={handleInputChange}
-          />
-        </p>
-        <button onClick={handleSearchGIPHY}>Search GIPHY</button>
-      </form>
+      <Form
+        item={itemState.item}
+        handleInputChange={handleInputChange}
+        handleAddItem={handleAddItem}
+      />
       <div>
         {
-          gifState.gifs.map(gif => (
-            <img
-              key={gif.id}
-              src={gif.isAnimated ? gif.animated : gif.still}
-              alt={gif.name}
-              onClick={() => handlePausePlay(gif.id)}
+          itemState.items.map((item, i) => (
+            <Item
+              key={i}
+              index={i}
+              item={item}
+              handleIsDone={handleIsDone}
+              handleDeleteItem={handleDeleteItem}
             />
           ))
         }
